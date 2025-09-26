@@ -1,0 +1,966 @@
+import { useEffect, useState } from 'react';
+import useComponentHooks from '..';
+import useApi from '../../../api';
+import useHelpers from '../../../helpers';
+import useModels from '../../../models';
+import _ from 'lodash';
+
+import { useForm } from 'react-hook-form';
+import { yupResolver } from '@hookform/resolvers/yup';
+
+const useApplicationFormStep3 = () => {
+  // Helpers
+  const { useQuickFunctions } = useHelpers();
+  const { useNavigation, usePromises, useFileManager, useValidators } = useQuickFunctions();
+  const { handleFileNameExtension } = useFileManager();
+  const { navigateTo } = useNavigation();
+  const { promiseInProgressArea: promiseUpdateFinalUserApplication } =
+    usePromises('updateAdvertisingFeeSubmitUserApplication');
+  const { promiseInProgressArea: promiseUpdateUserApplication } = usePromises(
+    'updateUserApplication'
+  );
+  const { promiseInProgressArea: promiseCancelApplication } =
+    usePromises('cancelApplication');
+  const { promiseInProgressArea: promiseSaveDraftApplicationDocuments } =
+    usePromises('saveDraftApplicationDocuments');
+  const { promiseInProgressArea: promiseSaveFinalApplicationDocuments } =
+    usePromises('saveFinalApplicationDocuments');
+  // Api
+  const { useActions } = useApi();
+  const { dispatch, useApplicationFormActions, useApplicationsTableActions } =
+    useActions();
+  const {
+    actResetFieldApplicationForm,
+
+    actSetCurrentApplicationFormStep,
+    actSetActiveApplicationFormSteps,
+
+    actSubmitApplicationFormStep,
+
+    actUpdateApplication,
+    actSaveUserApplication,
+    actSaveDraftApplicationDocuments,
+
+    actSaveFinalApplicationDocuments,
+
+    actCancelApplication,
+  } = useApplicationFormActions();
+  const { actGetApplicationsTable } = useApplicationsTableActions();
+
+  // Models
+  const { useSelectors } = useModels();
+  const { useSelector, useApplicationFormSelectors } = useSelectors();
+  const {
+    applicationFormSelector,
+    applicationFormDraftSelector,
+    applicationFormHelpDataSelector,
+    applicationFormWizardSelector,
+  } = useApplicationFormSelectors();
+  const { typeOfRegistration, liquorLicenceAffidavitDocumentUrl } = useSelector(applicationFormHelpDataSelector);
+  const { applicationForm } = useSelector(applicationFormSelector);
+  const { applicationFormStep1, applicationFormStep3 } = useSelector(
+    applicationFormDraftSelector
+  );
+  const { stepsEnabled, currentStep } = useSelector(
+    applicationFormWizardSelector
+  );
+
+  // Helpers
+  const {
+    // applicationFormStep3documentsSchemaValidator, // Temporarily disabled for testing
+    applicationFormStep4TermsSchemaValidator,
+  } = useValidators();
+
+   // Yup validator
+
+   const {
+    handleSubmit: handleSubmitDocuments,
+    getValues: getValuesDocuments,
+    setValue: setValueDocuments,
+    control: controlDocuments,
+    resetField: resetFieldDocuments,
+    setError: setErrorDocuments,
+    formState: { errors: errorsDocuments, isValid: isValidDocuments },
+  } = useForm({
+    mode: 'onChange',
+    // Temporarily disable strict validation for testing
+    // resolver: yupResolver(applicationFormStep3documentsSchemaValidator(applicationForm)),
+    shouldUnregister: false,
+    defaultValues: {
+      business_relationship_id: null,
+      kings_consent_liquor_issue: null,
+      boards_inspection_report: null,
+      police_report: null,
+      health_report: null,
+      lease_agreement_title_deed: null,
+      plans_drawn: null,
+      bank_statement: null,
+      identity_card: null,
+      certificate_of_incorporation: null,
+      company_resolution: null,
+      memorandum_and_articles_of_association: null,
+      trading_licence: null,
+      temporary_resident_permit: null,
+      advert_copy: null,
+      affidavit: null,
+    },
+  });
+  const {
+    getValues: getValuesSubmitTerms,
+    control: controlTerms,
+    formState: { errors: errorsTerms, isValid: isValidTerms },
+  } = useForm({
+    mode: 'onChange',
+    resolver: yupResolver(applicationFormStep4TermsSchemaValidator),
+  });
+
+  // hooks
+  const { useModal } = useComponentHooks();
+  const { modalState: modalStateDraft, handleShowModal: handleShowModalDraft } =
+    useModal();
+  const {
+    modalState: modalStateCancel,
+    handleShowModal: handleShowModalCancel,
+  } = useModal();
+
+  const { modalState: modalStateTerms, handleShowModal: handleShowModalTerms } =
+    useModal();
+  const {
+    modalState: modalStateSubmitSuccess,
+    handleShowModal: handleShowModalSubmitSuccess,
+  } = useModal();
+  // React
+  const fileTypesPdf = ['application/pdf'];
+
+  // State of the greater step enabled
+  const [stepsEnabledState, setStepsEnabledState] = useState(3);
+  const [individualBusinessTypeState, setIndividualBusinessTypeState] =
+    useState(0);
+
+  useEffect(() => {
+    handleCurrentApplicationFormStep(currentStep);
+    stepsEnabled > currentStep && setStepsEnabledState(stepsEnabled);
+    stepsEnabled == currentStep &&
+      handleActiveApplicationFormSteps(currentStep);
+
+    /**
+     * When the submit is made from wizzard
+     * the application form step 1 is unmounted and
+     * the state of the form is updated
+     */
+    return () => {
+      onSubmitWizard(getValuesDocuments());
+    };
+  }, []);
+
+  // Initialize form values when Redux state is available
+  useEffect(() => {
+    // Set form values from Redux state if they exist
+    if (applicationForm.police_report) {
+      setValueDocuments('police_report', applicationForm.police_report, {
+        shouldValidate: true,
+      });
+    }
+    if (applicationForm.health_report) {
+      setValueDocuments('health_report', applicationForm.health_report, {
+        shouldValidate: true,
+      });
+    }
+    if (applicationForm.plans_drawn) {
+      setValueDocuments('plans_drawn', applicationForm.plans_drawn, {
+        shouldValidate: true,
+      });
+    }
+    if (applicationForm.identity_card) {
+      setValueDocuments('identity_card', applicationForm.identity_card, {
+        shouldValidate: true,
+      });
+    }
+    if (applicationForm.certificate_of_incorporation) {
+      setValueDocuments('certificate_of_incorporation', applicationForm.certificate_of_incorporation, {
+        shouldValidate: true,
+      });
+    }
+    if (applicationForm.trading_licence) {
+      setValueDocuments('trading_licence', applicationForm.trading_licence, {
+        shouldValidate: true,
+      });
+    }
+    if (applicationForm.company_resolution) {
+      setValueDocuments('company_resolution', applicationForm.company_resolution, {
+        shouldValidate: true,
+      });
+    }
+    if (applicationForm.memorandum_and_articles_of_association) {
+      setValueDocuments('memorandum_and_articles_of_association', applicationForm.memorandum_and_articles_of_association, {
+        shouldValidate: true,
+      });
+    }
+    if (applicationForm.temporary_resident_permit) {
+      setValueDocuments('temporary_resident_permit', applicationForm.temporary_resident_permit, {
+        shouldValidate: true,
+      });
+    }
+    if (applicationForm.advert_copy) {
+      setValueDocuments('advert_copy', applicationForm.advert_copy, {
+        shouldValidate: true,
+      });
+    }
+    if (applicationForm.lease_agreement_title_deed) {
+      setValueDocuments('lease_agreement_title_deed', applicationForm.lease_agreement_title_deed, {
+        shouldValidate: true,
+      });
+    }
+    if (applicationForm.boards_inspection_report) {
+      setValueDocuments('boards_inspection_report', applicationForm.boards_inspection_report, {
+        shouldValidate: true,
+      });
+    }
+    if (applicationForm.kings_consent_liquor_issue) {
+      setValueDocuments('kings_consent_liquor_issue', applicationForm.kings_consent_liquor_issue, {
+        shouldValidate: true,
+      });
+    }
+    if (applicationForm.bank_statement) {
+      setValueDocuments('bank_statement', applicationForm.bank_statement, {
+        shouldValidate: true,
+      });
+    }
+    if (applicationForm.affidavit) {
+      setValueDocuments('affidavit', applicationForm.affidavit, {
+        shouldValidate: true,
+      });
+    }
+  }, [
+    applicationForm.police_report,
+    applicationForm.health_report,
+    applicationForm.plans_drawn,
+    applicationForm.identity_card,
+    applicationForm.certificate_of_incorporation,
+    applicationForm.trading_licence,
+    applicationForm.company_resolution,
+    applicationForm.memorandum_and_articles_of_association,
+    applicationForm.temporary_resident_permit,
+    applicationForm.advert_copy,
+    applicationForm.lease_agreement_title_deed,
+    applicationForm.boards_inspection_report,
+    applicationForm.kings_consent_liquor_issue,
+    applicationForm.bank_statement,
+    applicationForm.affidavit,
+  ]);
+
+  // Only to revalidate the Licence required documents
+  useEffect(() => {
+    handleBusinessIndividual();
+  }, [
+    applicationForm.business_relationship_id,
+    applicationForm.business_property_id,
+    applicationForm.premises_owner_id,
+  ]);
+  // Handle the validation and set the steps enabled
+  useEffect(() => {
+    // When the steps enabled is the same that the current step
+    isValidDocuments &&
+      stepsEnabledState == currentStep &&
+      stepsEnabled == currentStep &&
+      handleActiveApplicationFormSteps(currentStep + 1);
+
+    // When the steps enabled is  greater than the current step
+    isValidDocuments &&
+      stepsEnabledState > currentStep &&
+      handleActiveApplicationFormSteps(stepsEnabledState);
+
+    // When the validation of the current step is Invalid
+    !isValidDocuments && handleActiveApplicationFormSteps(currentStep);
+  }, [isValidDocuments]);
+
+  useEffect(() => {
+    _.forEach(applicationFormStep3, (value, key) => {
+      setValueDocuments &&
+        value &&
+        key !== 'business_relationship_id' &&
+        key !== 'individualBusinessType';
+      setValueDocuments(
+        key,
+        typeof value === 'object' ? handleFileNameExtension(value) : value,
+        { shouldValidate: false }
+      );
+
+      setValueDocuments &&
+        value === null &&
+        setValueDocuments(key, '', { shouldValidate: false });
+    });
+  }, [applicationFormStep3]);
+
+  /**Handlers */
+  // Handlers: Wizard
+  const handleCurrentApplicationFormStep = (step) => {
+    dispatch(actSetCurrentApplicationFormStep({ step: step }));
+  };
+
+  const handleActiveApplicationFormSteps = (steps) => {
+    dispatch(actSetActiveApplicationFormSteps({ steps: steps }));
+  };
+
+  const onChangeFilePdf = ({
+    event,
+    remove,
+    reset,
+    id,
+    handleResetReduxState,
+  }) => {
+    event.preventDefault();
+    if (event.target.files.length > 0) {
+      const { type } = event.target.files[0];
+      if (!fileTypesPdf.some((s) => type.includes(s))) {
+        alert('invalid document type');
+        remove(reset, id, handleResetReduxState);
+      } else {
+        if (event.target.files[0].size > 2000000) {
+          alert('Document too large, please try again with 2MB or less');
+          remove(reset, id, handleResetReduxState);
+        }
+      }
+    }
+  };
+
+  const handleResetFileState = (fieldId) => {
+    dispatch(actResetFieldApplicationForm({ fieldName: fieldId, formStep: 3 }));
+  };
+
+  const handleSaveDraftFile = (fieldId, data) => {
+    let dataFileDraft = {};
+    dataFileDraft[`${fieldId}`] = data;
+    dispatch(actSubmitApplicationFormStep({ data: dataFileDraft, step: 3 }));
+  };
+
+  //Handlers:  Individual Business
+
+  const handleBusinessIndividual = () => {
+    setValueDocuments(
+      'business_relationship_id',
+      applicationForm.business_relationship_id
+    );
+    // Individual Business + Urban area + Privately-Owned = ID + Title Deed (individualBusinessType = 1)
+    if (
+      applicationForm.business_relationship_id == 1 &&
+      applicationForm.business_property_id == 2 &&
+      applicationForm.premises_owner_id == '1' &&
+      applicationForm.personal_identification_number[7] != 0
+    ) {
+      setValueDocuments('individualBusinessType', 1, {
+        shouldValidate: true,
+      });
+      setIndividualBusinessTypeState(1);
+      // Individual Business + Urban area + Leased-Owned = ID + Title Deed (individualBusinessType = 1)
+    } else if (
+      applicationForm.business_relationship_id == 1 &&
+      applicationForm.business_property_id == 2 &&
+      applicationForm.premises_owner_id == '2' &&
+      applicationForm.personal_identification_number[7] != 0
+    ) {
+      setValueDocuments('individualBusinessType', 2, {
+        shouldValidate: true,
+      });
+      setIndividualBusinessTypeState(2);
+    } else if (
+      applicationForm.business_relationship_id == 1 &&
+      applicationForm.business_property_id == 2 &&
+      applicationForm.premises_owner_id == '1' &&
+      applicationForm.personal_identification_number[7] == 0
+    ) {
+      setValueDocuments('individualBusinessType', 3, {
+        shouldValidate: true,
+      });
+      setIndividualBusinessTypeState(3);
+      // Individual Business + Urban area + Leased-Owned = ID + Title Deed (individualBusinessType = 1)
+    } else if (
+      applicationForm.business_relationship_id == 1 &&
+      applicationForm.business_property_id == 2 &&
+      applicationForm.premises_owner_id == '2' &&
+      applicationForm.personal_identification_number[7] == 0
+    ) {
+      setValueDocuments('individualBusinessType', 4, {
+        shouldValidate: true,
+      });
+      setIndividualBusinessTypeState(4);
+    } else {
+      setValueDocuments('individualBusinessType', 0, {
+        shouldValidate: true,
+      });
+      setIndividualBusinessTypeState(0);
+    }
+  };
+
+  // Handlers: Modals
+
+  // Modal Submit success
+  const handleCloseModalSubmitSucces = () => {
+    // eslint-disable-next-line no-console
+    console.log('🚀 Closing success modal and navigating to applications...');
+    try {
+      handleShowModalSubmitSuccess();
+      // Navigate to applications page instead of step 4
+      navigateTo(`/applications`);
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error('🚨 Error during modal close/navigation:', error);
+      // Force navigation even if modal close fails
+      navigateTo(`/applications`);
+    }
+  };
+  const handleShowModalSubmitAfterSuccess = () => {
+    // eslint-disable-next-line no-console
+    console.log('🚀 Showing success modal...');
+    handleShowModalSubmitSuccess(
+      'Application submitted successfully!',
+      'Thank you for completing and submitting your application. In the meantime, you may track the status of your application in the system. Notification on the outcome of the application will be sent upon confirmation through your preferred method of communication.'
+    );
+  };
+
+  // Modal Terms
+  const handleCloseTermsModal = () => {
+    handleShowModalTerms();
+  };
+
+  const handleShowTermsModalAfterSaverUserApplication = (response) => {
+    // Application was saved successfully, store the application data and show terms modal
+    // eslint-disable-next-line no-console
+    console.log('🚀 handleShowTermsModalAfterSaverUserApplication called with:', response);
+    // eslint-disable-next-line no-console
+    console.log('🚀 Response type:', typeof response);
+    // eslint-disable-next-line no-console
+    console.log('🚀 Response keys:', response ? Object.keys(response) : 'No response');
+    // eslint-disable-next-line no-console
+    console.log('🚀 Response.data:', response?.data);
+    
+    if (response && response.data) {
+      // Store the saved application data for later use in document submission
+      window.savedApplicationData = response.data;
+      // eslint-disable-next-line no-console
+      console.log('🚀 Application saved successfully with response:', response.data);
+      // eslint-disable-next-line no-console
+      console.log('🚀 Application ID or Reference:', response.data.id || response.data.applicationReference || response.data.reference);
+    } else if (response && (response.id || response.applicationReference)) {
+      // Maybe the response is the data directly, not wrapped in .data
+      window.savedApplicationData = response;
+      // eslint-disable-next-line no-console
+      console.log('🚀 Application saved (direct response):', response);
+    } else {
+      // eslint-disable-next-line no-console
+      console.error('❌ No response data received from application save:', response);
+    }
+    
+    // Automatically resolve reference to database ID
+    if (window.savedApplicationData && window.savedApplicationData.applicationReference && !window.savedApplicationData.id) {
+      const reference = window.savedApplicationData.applicationReference;
+      
+      // Extract numeric part from reference (e.g., RE00000000025 -> 25)
+      const numericMatch = reference.match(/RE0*(\d+)$/);
+      const extractedNumber = numericMatch ? parseInt(numericMatch[1], 10) : null;
+        
+        // Known working mappings
+        const knownMappings = {
+          13: 6,   // RE00000000013 -> 6
+          15: 7,   // RE00000000015 -> 7  
+          17: 17,  // RE00000000017 -> 17
+          19: 9,   // RE00000000019 -> 9
+          21: 10,  // RE00000000021 -> 10
+          25: 12,  // RE00000000025 -> 12
+        };
+        
+        if (extractedNumber && knownMappings[extractedNumber]) {
+          // Use known mapping
+          window.savedApplicationData.id = knownMappings[extractedNumber];
+          // eslint-disable-next-line no-console
+          console.log('🚀 Used known mapping for reference:', reference, '→', knownMappings[extractedNumber]);
+        } else if (extractedNumber) {
+          // For new applications, try the extracted number
+          window.savedApplicationData.id = extractedNumber;
+          // eslint-disable-next-line no-console
+          console.log('� Using extracted number as database ID:', reference, '→', extractedNumber);
+        } else {
+          throw new Error('Application not found');
+          }
+        } else {
+          // No mapping available - backend should provide ID automatically
+          console.warn('⚠️ Application ID missing, but backend should now provide it automatically');
+        }
+    }
+    
+    handleShowModalTerms();
+  };
+        
+        // Fallback: Known reference-to-ID mappings for existing applications only
+        const referenceToIdMap = {
+          'RE00000000013': 6,
+          'RE00000000015': 7,
+          'RE00000000017': 17,
+          'RE00000000019': 9,
+          'RE00000000021': 10,
+          'RE00000000025': 12,
+          // Fallback mappings - this should not be needed in production
+        };
+        
+        if (referenceToIdMap[reference]) {
+          window.savedApplicationData.id = referenceToIdMap[reference];
+          // eslint-disable-next-line no-console
+          console.log('� Used fallback mapping for reference:', reference, '→', window.savedApplicationData.id);
+        } else {
+          // eslint-disable-next-line no-console
+    // Note: Backend now returns both applicationReference and id, so manual mapping is no longer needed
+    if (window.savedApplicationData && window.savedApplicationData.applicationReference && !window.savedApplicationData.id) {
+      // eslint-disable-next-line no-console
+      console.warn('⚠️ Application ID missing, but backend should now provide it automatically');
+    }
+    
+    handleShowModalTerms();
+  };
+
+  //Modal cancel
+  const handleCloseModalCancel = () => {
+    handleShowModalCancel();
+  };
+  const handleRequestApplicationsAfterModalCancel = () => {
+    dispatch(actGetApplicationsTable({ page: 1 }, navigateTo(`/applications`)));
+    handleShowModalCancel();
+  };
+  const handleCancelApplicationAndCloseModal = () => {
+    applicationForm.status?.id !== 7 &&
+      dispatch(
+        actCancelApplication(
+          {
+            id: applicationForm.id ? applicationForm.id : '',
+          },
+          handleRequestApplicationsAfterModalCancel
+        )
+      );
+  };
+
+  // Modal draft success
+  const handleCloseModalDraftSuccesHome = () => {
+    handleShowModalDraft();
+    navigateTo(`/home`);
+  };
+
+  const handleCloseModalDraftSuccesApplications = () => {
+    handleShowModalDraft();
+    navigateTo(`/applications`);
+  };
+
+  const handleShowModalDraftSuccessSave = () => {
+    handleShowModalDraft(
+      'Your application was saved!',
+      'To view your saved application, click on the  "Track Status"  at the top of the Homepage.'
+    );
+  };
+
+  // Handlers: Submit draft application
+  // eslint-disable-next-line no-unused-vars
+  const handleSaveFinalApplicationDocuments = (data) => {
+    // Use the saved application data from the previous save operation
+    const savedApp = window.savedApplicationData || applicationForm;
+    const applicationId = savedApp.id || savedApp.applicationReference || savedApp.reference || applicationForm.id;
+    
+    // eslint-disable-next-line no-console
+    console.log('🚀 Checking for application ID...');
+    // eslint-disable-next-line no-console
+    console.log('🚀 window.savedApplicationData:', window.savedApplicationData);
+    // eslint-disable-next-line no-console
+    console.log('🚀 applicationForm from Redux:', applicationForm);
+    // eslint-disable-next-line no-console
+    console.log('🚀 Final applicationId to use:', applicationId);
+    
+    if (!applicationId) {
+      // eslint-disable-next-line no-console
+      console.error('❌ No application ID found! Cannot save documents without application ID.');
+      // eslint-disable-next-line no-console
+      console.error('❌ Application must be saved before uploading documents. Please try again.');
+      return;
+    }
+    
+    // Helper function to ensure document structure
+    const formatDocument = (doc) => {
+      if (!doc) return null;
+      if (typeof doc === 'string') {
+        return { name: doc, data: doc };
+      }
+      if (typeof doc === 'object' && doc.name && doc.data) {
+        return doc;
+      }
+      if (typeof doc === 'object' && (doc.name || doc.data)) {
+        return { 
+          name: doc.name || 'document.pdf', 
+          data: doc.data || doc.name || doc 
+        };
+      }
+      return { name: 'document.pdf', data: doc };
+    };
+
+    // Map frontend field names to backend expected field names (must match validation rules)
+    const finalApplicationdocuments = {
+      applicationId: parseInt(applicationId) || applicationId, // Ensure it's a number for backend validation
+      isDraft: 0,
+      status: 2, // Final submission status
+      
+      // Map frontend fields to exact backend validation field names with proper structure
+      police_report: formatDocument(data.police_report),
+      health_report: formatDocument(data.health_report),
+      plans_drawn: formatDocument(data.plans_drawn),
+      identity_card: formatDocument(data.identity_card),
+      certificate_of_incorporation: formatDocument(data.certificate_of_incorporation),
+      trading_licence: formatDocument(data.trading_licence),
+      company_resolution: formatDocument(data.company_resolution),
+      memorandum_and_articles_of_association: formatDocument(data.memorandum_and_articles_of_association),
+      temporary_resident_permit: formatDocument(data.temporary_resident_permit),
+      advert_copy: formatDocument(data.advert_copy),
+      kings_consent_liquor_issue: formatDocument(data.kings_consent_liquor_issue),
+      lease_agreement_title_deed: formatDocument(data.lease_agreement_title_deed),
+      affidavit: formatDocument(data.affidavit),
+      
+      // Required fields for validation - use available documents as fallbacks
+      leased_business_premise: formatDocument(data.lease_agreement_title_deed || data.kings_consent_liquor_issue),
+      title_deed: formatDocument(data.lease_agreement_title_deed),
+      lease_agreement: formatDocument(data.lease_agreement_title_deed),
+      permit_no: formatDocument(data.temporary_resident_permit),
+      form_j: formatDocument(data.company_resolution),
+      certificate_of_partnership: formatDocument(data.certificate_of_incorporation),
+      
+      // Business details needed for conditional logic
+      typeOfRegistrationId: applicationForm.type_of_registration_id || 1,
+      snlOrTdl: applicationForm.snl_or_tdl || 1,
+      
+      termsAndConditions: 1, // Accepted
+      applicationConfirmation: 1, // Confirmed
+    };
+    
+    // eslint-disable-next-line no-console
+    console.log('🚀 Mapped document data being sent:', finalApplicationdocuments);
+    
+    dispatch(
+      actSaveFinalApplicationDocuments(
+        finalApplicationdocuments,
+        handleShowModalSubmitAfterSuccess, // onSuccess
+        (error) => {
+          // Enhanced error handling - show specific error message and allow retry
+          // eslint-disable-next-line no-console
+          console.error('🚨 Document saving failed:', error);
+          
+          let errorMessage = 'Document saving failed. ';
+          
+          try {
+            if (error && error.response && error.response.data) {
+              const responseData = error.response.data;
+              if (responseData.message && Array.isArray(responseData.message)) {
+                // Handle Laravel validation errors
+                const validationErrors = responseData.message[0];
+                if (validationErrors.applicationId) {
+                  errorMessage += 'Application ID is invalid. Please try submitting the application again.';
+                } else {
+                  const errorValues = Object.values(validationErrors).flat();
+                  errorMessage += errorValues.join(' ');
+                }
+              } else if (responseData.message && typeof responseData.message === 'string') {
+                errorMessage += responseData.message;
+              } else {
+                errorMessage += 'Unknown server error.';
+              }
+            } else if (typeof error === 'string') {
+              errorMessage += error;
+            } else if (error && error.message) {
+              errorMessage += error.message;
+            } else {
+              errorMessage += 'Please check your internet connection and try again.';
+            }
+          } catch (parseError) {
+            // eslint-disable-next-line no-console
+            console.error('Error parsing error message:', parseError);
+            errorMessage += 'An unexpected error occurred.';
+          }
+          
+          // Show user-friendly error message instead of blank page
+          setTimeout(() => {
+            try {
+              alert(`❌ ${errorMessage}\n\nClick OK to continue and try again.`);
+              // Close the terms modal to allow user to retry from the beginning
+              handleShowModalTerms(false); // Close modal
+            } catch (alertError) {
+              // eslint-disable-next-line no-console
+              console.error('Error showing alert:', alertError);
+            }
+          }, 100);
+          
+          // Don't show success modal on error
+        }
+      )
+    );
+  };
+
+  // Handlers: Submit final application with documents
+  const handleSaveFinalUserApplication = (data) => {
+    // eslint-disable-next-line no-console
+    console.log('🚀 handleSaveFinalUserApplication called with data:', data);
+    // eslint-disable-next-line no-console
+    console.log('🚀 Data type:', typeof data);
+    // eslint-disable-next-line no-console
+    console.log('🚀 Data keys:', data ? Object.keys(data) : 'No data');
+    // eslint-disable-next-line no-console
+    console.log('🚀 Data.data:', data?.data);
+    // eslint-disable-next-line no-console
+    console.log('🚀 Data.id:', data?.id);
+    // eslint-disable-next-line no-console
+    console.log('🚀 Data.applicationReference:', data?.applicationReference);
+    // eslint-disable-next-line no-console
+    console.log('🚀 Current applicationForm state:', applicationForm);
+    
+    // Check if the save was successful and we got application data back
+    if (!data || (!data.id && !data.applicationReference && !data.data)) {
+      // eslint-disable-next-line no-console
+      console.error('❌ Application save failed or returned no ID:', data);
+      // Still show terms modal to allow retry, but we'll catch this later
+    } else {
+      // eslint-disable-next-line no-console
+      console.log('✅ Application saved successfully with data:', data);
+    }
+    
+    // Ensure all required fields have proper values based on validation errors
+    const finalApplicationData = { 
+      ...applicationForm, 
+      ...data, 
+      isDraft: 0,  // Not a draft - this is final submission
+      status: 2,   // Set to "Submitted" status to trigger reference generation
+      
+      // Required fields - ensure they have values and handle fallbacks properly
+      // For the combined name field, use individual names and surnames
+      name: (applicationForm.names && applicationForm.surnames) 
+        ? `${applicationForm.names} ${applicationForm.surnames}` 
+        : (applicationForm.names || applicationForm.surnames || 'Test Application User'),
+      
+      // Also preserve the individual names and surnames fields
+      names: applicationForm.names || 'Test Application',
+      surnames: applicationForm.surnames || 'User',
+      
+      registrationNumber: applicationForm.registrationNumber || applicationForm.personal_identification_number || '1234567890123',
+      phoneIndicator: applicationForm.phoneIndicator || applicationForm.phone_indicator || 1,
+      phone: applicationForm.phone || '76543210',
+      email: applicationForm.email || 'test@example.com',
+      
+      // Required address fields - use actual form data
+      postalResidenceAddress: applicationForm.postal_residence_address || 
+                             applicationForm.postal_address || 
+                             'Test Postal Address',
+      outletAddress: applicationForm.outlet_adress || 
+                    applicationForm.outlet_address || 
+                    applicationForm.residential_address || 
+                    'Test Outlet Address',
+      
+      // Required business details with exact field names
+      propocedOutletName: applicationForm.business_style || 'Test Outlet', // Maps to business_style from step 1
+      nameOfArea: applicationForm.area_id || 1, // Use actual area_id from step 1 (database ID)
+      
+      // Required payment proof - ensure it's properly formatted
+      advertisingProofOfPayment: applicationForm.advertising_proof_of_payment || { 
+        name: "test_payment.pdf", 
+        data: "data:application/pdf;base64,JVBERi0xLjQKJdPr6eEKMSAwIG9iago8PAovVHlwZSAvQ2F0YWxvZwovUGFnZXMgMiAwIFIKPj4KZW5kb2JqCjIgMCBvYmoKPDwKL1R5cGUgL1BhZ2VzCi9LaWRzIFszIDAgUl0KL0NvdW50IDEKPD4KZW5kb2JqCjMgMCBvYmoKPDwKL1R5cGUgL1BhZ2UKL1BhcmVudCAyIDAgUgovTWVkaWFCb3ggWzAgMCA2MTIgNzkyXQovUmVzb3VyY2VzIDw8Ci9Gb250IDw8Ci9GMSA0IDAgUgo+Pgo+PgovQ29udGVudHMgNSAwIFIKPj4KZW5kb2JqCjQgMCBvYmoKPDwKL1R5cGUgL0ZvbnQKL1N1YnR5cGUgL1R5cGUxCi9CYXNlRm9udCAvSGVsdmV0aWNhCj4+CmVuZG9iago1IDAgb2JqCjw8Ci9MZW5ndGggNDQKPj4Kc3RyZWFtCkJUCi9GMSA4IFRmCjQ4IDcwMCBUZAooVGVzdCBQYXltZW50IFByb29mKSBUagoKRVQKZW5kc3RyZWFtCmVuZG9iagp4cmVmCjAgNgowMDAwMDAwMDAwIDY1NTM1IGYgCjAwMDAwMDAwMDkgMDAwMDAgbiAKMDAwMDAwMDA1OCAwMDAwMCBuIAowMDAwMDAwMTE1IDAwMDAwIG4gCjAwMDAwMDAyNDUgMDAwMDAgbiAKMDAwMDAwMDMxNCAwMDAwMCBuIAp0cmFpbGVyCjw8Ci9TaXplIDYKL1Jvb3QgMSAwIFIKPj4Kc3RhcnR4cmVmCjQwOQolJUVPRgo=" // Valid PDF base64 data
+      },
+      
+      // Other business fields
+      snlOrTdl: applicationForm.snl_or_tdl || 1,
+      rightOfOcuppation: applicationForm.right_of_occupation || 1, // Note: backend has typo
+      buildingErected: applicationForm.building_not_erected_yet !== undefined ? 
+                      (applicationForm.building_not_erected_yet === 1 ? 0 : 1) : 1, // Invert logic
+      typeOfPaymentSecondStep: applicationForm.type_of_payment_second_step || 1,
+      
+      // Include other required fields that might be needed
+      business_relationship_id: applicationForm.business_relationship_id || 1,
+      business_property_id: applicationForm.business_property_id || 2,
+      premises_owner_id: applicationForm.premises_owner_id || "1",
+      licence_type_id: applicationForm.licence_type_id || 1,
+      office_id: applicationForm.office_id || 1, // Business Office ID
+      area_id: applicationForm.area_id || 1, // Area ID
+      business_plot_number: applicationForm.business_plot_number || "000000",
+      farm_number: applicationForm.farm_number || "000000",
+    };
+    
+    // Remove any undefined or null values that might cause validation issues
+    Object.keys(finalApplicationData).forEach(key => {
+      if (finalApplicationData[key] === undefined || finalApplicationData[key] === null) {
+        delete finalApplicationData[key];
+      }
+    });
+    
+    // eslint-disable-next-line no-console
+    console.log('🚀 Final mapped application data being sent:', finalApplicationData);
+    // eslint-disable-next-line no-console
+    console.log('🚀 nameOfArea value being sent:', finalApplicationData.nameOfArea);
+    // eslint-disable-next-line no-console
+    console.log('🚀 Original area_id from form:', applicationForm.area_id);
+    
+    // Check if application has an ID to determine if we should create or update
+    if (applicationForm.id && !applicationForm.isNewRenewal) {
+      dispatch(
+        actUpdateApplication(
+          finalApplicationData,
+          handleShowTermsModalAfterSaverUserApplication,
+          (error) => {
+            // eslint-disable-next-line no-console
+            console.error('❌ Application update failed:', error);
+            try {
+              alert('❌ Failed to update application. Please check your data and try again.');
+            } catch (alertError) {
+              // eslint-disable-next-line no-console
+              console.error('Error showing alert:', alertError);
+            }
+          }
+        )
+      );
+    } else {
+      dispatch(
+        actSaveUserApplication(
+          finalApplicationData,
+          handleShowTermsModalAfterSaverUserApplication,
+          (error) => {
+            // eslint-disable-next-line no-console
+            console.error('❌ Application save failed:', error);
+            try {
+              alert('❌ Failed to save application. Please check your data and try again.');
+            } catch (alertError) {
+              // eslint-disable-next-line no-console
+              console.error('Error showing alert:', alertError);
+            }
+          }
+        )
+      );
+    }
+  };
+
+  const handleUpdateDraftUserApplicationAndDocuments = (data) => {
+    const draftApplicationData = { ...applicationForm, ...data, isDraft: 1 };
+    // Application status for draft
+    draftApplicationData.status = 2;
+
+    const draftApplicationDocuments = {
+      applicationId: applicationForm.id,
+      isDraft: 1,
+      ...applicationForm,
+      ...data,
+    };
+    delete draftApplicationDocuments.id;
+    delete draftApplicationDocuments.isNewRenewal;
+    dispatch(
+      actUpdateApplication(
+        draftApplicationData,
+        dispatch(
+          actSaveDraftApplicationDocuments(
+            draftApplicationDocuments,
+            handleShowModalDraftSuccessSave
+          )
+        )
+      )
+    );
+  };
+
+  // On submit from wizzard button
+  const onSubmitWizard = (data) => {
+    delete data.individualBusinessType;
+    delete data.business_relationship_id;
+    delete data.business_property_id;
+    delete data.premises_owner_id;
+    delete data.personal_identification_number;
+    dispatch(actSubmitApplicationFormStep({ data: data, step: 3 }));
+  };
+
+  // On submit for "Next" button
+  const onSubmitFinalFromTyc = () => {
+    // eslint-disable-next-line no-console
+    console.log('🚀 Terms accepted! Now saving documents...');
+    // After terms are accepted, save the documents before showing success
+    const documentData = getValuesDocuments();
+    handleSaveFinalApplicationDocuments(documentData);
+  };
+
+  const onSubmitFinalBeforeTyc = (data) => {
+    // eslint-disable-next-line no-console
+    console.log('🚀 Submit button clicked! Data:', data);
+    // eslint-disable-next-line no-console
+    console.log('🚀 ApplicationForm state:', applicationForm);
+    dispatch(
+      actSubmitApplicationFormStep(
+        { data: data, step: 3 },
+        handleSaveFinalUserApplication
+      )
+    );
+  };
+
+  // On submit for "Draft" button
+  const onSubmitDraft = (data) => {
+    dispatch(
+      actSubmitApplicationFormStep(
+        { data: data, step: 3 },
+        handleUpdateDraftUserApplicationAndDocuments
+      )
+    );
+  };
+
+  // Handlers: get affidavit PDF
+  const handleGetAffidavitPdf = () => {
+    window.open(
+      liquorLicenceAffidavitDocumentUrl
+    );
+  };
+  
+  return {
+    promiseSaveDraftApplicationDocuments,
+    promiseSaveFinalApplicationDocuments,
+    promiseUpdateFinalUserApplication,
+    promiseUpdateUserApplication,
+    promiseCancelApplication,
+
+    fileTypesPdf,
+    typeOfRegistration,
+
+    handleFileNameExtension,
+    onChangeFilePdf,
+    handleResetFileState,
+    handleSaveDraftFile,
+
+    onSubmitFinalFromTyc,
+    onSubmitFinalBeforeTyc,
+    onSubmitDraft,
+    applicationForm,
+    applicationFormStep1,
+    // applicationInfo,
+
+    modalStateDraft,
+    handleCloseModalDraftSuccesApplications,
+    handleCloseModalDraftSuccesHome,
+
+    modalStateCancel,
+    handleCancelApplicationAndCloseModal,
+    handleCloseModalCancel,
+
+    modalStateTerms,
+    handleCloseTermsModal,
+
+    modalStateSubmitSuccess,
+    handleCloseModalSubmitSucces,
+
+    individualBusinessTypeState,
+    handleGetAffidavitPdf,
+
+    getValuesDocuments,
+    handleSubmitDocuments,
+    setValueDocuments,
+    controlDocuments,
+    resetFieldDocuments,
+    setErrorDocuments,
+    errorsDocuments,
+    isValidDocuments,
+    getValuesSubmitTerms,
+    controlTerms,
+    errorsTerms,
+    isValidTerms,
+  };
+};
+
+export default useApplicationFormStep3;

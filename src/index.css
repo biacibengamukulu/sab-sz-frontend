@@ -1,0 +1,225 @@
+@font-face {
+  font-family: 'Gotham-Black';
+  src: local('Gotham-Black'),
+    url('./assets/fonts/Gotham-Black.otf') format('truetype');
+}
+
+@font-face {
+  font-family: 'Gotham-BlackItalic';
+  src: local('Gotham-BlackItalic'),
+    url('./assets/fonts/Gotham-BlackItalic.otf') format('truetype');
+}
+
+@font-face {
+  font-family: 'Gotham-BlackItalic';
+  src: local('Gotham-BlackItalic'),
+    url('./assets/fonts/Gotham-BlackItalic.otf') format('truetype');
+}
+
+@font-face {
+  font-family: 'Gotham-Bold';
+  src: local('Gotham-Bold'),
+    url('./assets/fonts/Gotham-Bold.otf') format('truetype');
+}
+
+@font-face {
+  font-family: 'Gotham-BoldItalic';
+  src: local('Gotham-BoldItalic'),
+    url('./assets/fonts/Gotham-BoldItalic.otf') format('truetype');
+}
+
+@font-face {
+  font-family: 'Gotham-Book';
+  src: local('Gotham-Book'),
+    url('./assets/fonts/Gotham-Book.otf') format('truetype');
+}
+
+@font-face {
+  font-family: 'Gotham-BookItalic';
+  src: local('Gotham-BookItalic'),
+    url('./assets/fonts/Gotham-BookItalic.otf') format('truetype');
+}
+
+@font-face {
+  font-family: 'Gotham-Light';
+  src: local('Gotham-Light'),
+    url('./assets/fonts/Gotham-Light.otf') format('truetype');
+}
+
+@font-face {
+  font-family: 'Gotham-LightItalic';
+  src: local('Gotham-LightItalic'),
+    url('./assets/fonts/Gotham-LightItalic.otf') format('truetype');
+}
+
+@font-face {
+  font-family: 'Gotham-Medium';
+  src: local('Gotham-Medium'),
+    url('./assets/fonts/Gotham-Medium.otf') format('truetype');
+}
+
+@font-face {
+  font-family: 'Gotham-MediumItalic';
+  src: local('Gotham-MediumItalic'),
+    url('./assets/fonts/Gotham-MediumItalic.otf') format('truetype');
+}
+
+@font-face {
+  font-family: 'Gotham-Thin';
+  src: local('Gotham-Thin'),
+    url('./assets/fonts/Gotham-Thin.otf') format('truetype');
+}
+
+@font-face {
+  font-family: 'Gotham-Ultra';
+  src: local('Gotham-Ultra'),
+    url('./assets/fonts/Gotham-Ultra.otf') format('truetype');
+}
+
+@font-face {
+  font-family: 'Gotham-UltraItalic';
+  src: local('Gotham-UltraItalic'),
+    url('./assets/fonts/Gotham-UltraItalic.otf') format('truetype');
+}
+
+@font-face {
+  font-family: 'Gotham-XLight';
+  src: local('Gotham-XLight'),
+    url('./assets/fonts/Gotham-XLight.otf') format('truetype');
+}
+
+@font-face {
+  font-family: 'Gotham-XLightItalic';
+  src: local('Gotham-XLightItalic'),
+    url('./assets/fonts/Gotham-XLightItalic.otf') format('truetype');
+}
+
+@font-face {
+  font-family: 'GothamRnd-Bold';
+  src: local('GothamRnd-Bold'),
+    url('./assets/fonts/GothamRnd-Bold.otf') format('truetype');
+}
+
+@font-face {
+  font-family: 'GothamRnd-BoldIta';
+  src: local('GothamRnd-BoldIta'),
+    url('./assets/fonts/GothamRnd-BoldIta.otf') format('truetype');
+}
+
+@font-face {
+  font-family: 'GothamRnd-Book';
+  src: local('GothamRnd-Book'),
+    url('./assets/fonts/GothamRnd-Book.otf') format('truetype');
+}
+
+@font-face {
+  font-family: 'GothamRnd-BookIta';
+  src: local('GothamRnd-BookIta'),
+    url('./assets/fonts/GothamRnd-BookIta.otf') format('truetype');
+}
+
+@font-face {
+  font-family: 'GothamRnd-Light';
+  src: local('GothamRnd-Light'),
+    url('./assets/fonts/GothamRnd-Light.otf') format('truetype');
+}
+
+@font-face {
+  font-family: 'GothamRnd-LightIta';
+  src: local('GothamRnd-LightIta'),
+    url('./assets/fonts/GothamRnd-LightIta.otf') format('truetype');
+}
+
+@font-face {
+  font-family: 'GothamRnd-Medium';
+  src: local('GothamRnd-Medium'),
+    url('./assets/fonts/GothamRnd-Medium.otf') format('truetype');
+}
+
+@font-face {
+  font-family: 'GothamRnd-MediumIta';
+  src: local('GothamRnd-MediumIta'),
+    url('./assets/fonts/GothamRnd-MediumIta.otf') format('truetype');
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'GothamRnd-Medium',
+    'Roboto', 'Gotham', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans',
+    'Droid Sans', 'Helvetica Neue', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.StyledTypography {
+  font-family: 'GothamRnd-Medium' !important;
+  font-weight: 400 !important;
+}
+.StyledTypographyBold {
+  font-family: 'GothamRnd-Bold' !important;
+  font-weight: 400 !important;
+}
+.StyledTypographyLight {
+  font-family: 'GothamRnd-Light' !important;
+  font-weight: 400 !important;
+}
+
+.StyledTypographyBook {
+  font-family: 'GothamRnd-Book' !important;
+  font-weight: 400 !important;
+}
+.StyledButton {
+  font-family: 'GothamRnd-Medium' !important;
+}
+.StyledFormControl {
+  font-family: 'GothamRnd-Medium' !important;
+  font-weight: 400 !important;
+}
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+
+iframe {
+  display: none !important;
+}
+
+.MuiTooltip-popper .MuiTooltip-tooltip {
+  position: relative;
+  max-width: 400px;
+  margin: 0;
+  padding: 12px 12px;
+  border-radius: 4px;
+  box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.08);
+
+  background: #2c2d2e;
+  color: #ffffff;
+  font-family: 'GothamRnd-Book' !important;
+  font-size: 12px;
+  line-height: 17px;
+  font-weight: 400;
+  word-wrap: break-word;
+}
+.MuiList-root {
+  display: flex !important;
+  width: 100%;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  text-align: left !important;
+}
+.MuiList-root .MuiMenuItem-root {
+  width: 100% !important;
+  padding: 6px 16px !important;
+  align-items: center !important;
+  text-align: left !important;
+  justify-self: flex-start !important;
+}
+
+.MuiList-root .MuiMenuItem-root.MuiButtonBase-root {
+  text-align: left !important;
+  justify-content: flex-start !important;
+}
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
